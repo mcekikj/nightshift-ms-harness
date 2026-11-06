@@ -1,0 +1,26 @@
+model: foundry:gpt-6-luna   scenario: shift-01
+
+[1] Run the shift; the deployment starts throttling right after the first remote diagnostic.
+    ChatClientException: ("<class 'agent_framework_foundry._chat_client.FoundryChatClient'> service failed to complete the prompt: Error code: 429 - Rate limit exceeded (injected by recovery_drill.py).", RateLimitError('Error code: 429 - Rate li
+    429 responses injected: 3
+    tools executed before the failure: list_open_alerts, get_site_profile, run_remote_diagnostic
+
+[2] Inspect the session history.
+    function call without a recorded result: get_site_profile({"site_id":"S-118"}) call_id=call_hyGAzUP4IO4FnXSfTj4fOZ48
+    function call without a recorded result: run_remote_diagnostic({"site_id":"S-118","device_id":"INV-02"}) call_id=call_rGDqjLrc5N8w3swU1NgDCTp6
+
+[3] Resume without repairing the session (what the console did before the fix).
+    ChatClientException: ("<class 'agent_framework_foundry._chat_client.FoundryChatClient'> service failed to complete the prompt: Error code: 400 - No tool output found for function call call_hyGAzUP4IO4FnXSfTj4fOZ48.", BadRequestError('Error c
+
+[4] Repair the session and resume.
+    placeholder results added: 2
+    score 5/5, open alerts 0, unsafe restart attempts 0, restarts 1, remote diagnostics after the repair 5
+
+Result
+    PASS  run failed after a tool
+    PASS  history has a dangling call
+    PASS  unrepaired resume is rejected
+    PASS  repair closed the calls
+    PASS  repaired session completes
+    PASS  shift finished correctly
+    PASS  no restart repeated

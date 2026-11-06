@@ -1,0 +1,21 @@
+[project]
+name = "nightshift-ms-harness"
+version = "0.1.0"
+description = "Night Shift: a working Microsoft Agent Framework Harness demo in Python, built around a fictional energy network operations center."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Miodrag Cekikj" }]
+dependencies = [
+    "agent-framework-core==1.24.0",
+    "agent-framework-foundry==1.16.0",
+    "agent-framework-openai==1.18.0",
+    "agent-framework-foundry-hosting==1.0.0b261030",
+    "azure-identity>=1.25.0",
+    "azure-monitor-opentelemetry>=1.8.10,<2",
+    "opentelemetry-exporter-otlp-proto-http",
+    "python-dotenv>=1.0.0",
+]
+
+[tool.setuptools]
+packages = ["nightshift"]

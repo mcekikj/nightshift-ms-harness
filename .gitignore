@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+.nightshift/
+workspace/*
+!workspace/reports/
+workspace/reports/*
+!workspace/reports/.gitkeep
+results/*/
+agent-file-memory/
+.DS_Store
+.azure
+azure.yaml
+results/*.json
+.ruff_cache/

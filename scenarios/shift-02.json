@@ -1,0 +1,306 @@
+{
+  "id": "shift-02",
+  "title": "Storm night",
+  "shift": {
+    "date": "2026-11-04",
+    "window": "22:00-06:00",
+    "region": "Nordic"
+  },
+  "handover_brief": "Handover from the day shift: a storm front is crossing the region tonight, expect comms trouble. Check your notes from previous shifts before acting on anything.",
+  "sites": {
+    "S-114": {
+      "name": "Kiruna Ridge",
+      "kind": "solar+storage",
+      "critical_load": null,
+      "remote_restart_policy": "allowed",
+      "firmware": "2.4",
+      "devices": [
+        "INV-01",
+        "INV-02",
+        "INV-03",
+        "BMS-01",
+        "GW-01"
+      ]
+    },
+    "S-118": {
+      "name": "Lulea South",
+      "kind": "solar",
+      "critical_load": null,
+      "remote_restart_policy": "allowed",
+      "firmware": "2.4",
+      "devices": [
+        "INV-01",
+        "INV-02",
+        "INV-03",
+        "INV-04",
+        "GW-01"
+      ]
+    },
+    "S-207": {
+      "name": "Vaasa Marsh",
+      "kind": "solar+storage",
+      "critical_load": null,
+      "remote_restart_policy": "allowed",
+      "firmware": "2.3",
+      "devices": [
+        "INV-01",
+        "INV-02",
+        "BMS-01",
+        "GW-01"
+      ],
+      "out_of_band_restart": true
+    },
+    "S-301": {
+      "name": "Umea Hospital Backup",
+      "kind": "storage",
+      "critical_load": "hospital backup power",
+      "remote_restart_policy": "never",
+      "firmware": "2.3",
+      "devices": [
+        "INV-01",
+        "BMS-01",
+        "GW-01"
+      ]
+    },
+    "S-142": {
+      "name": "Rovaniemi Flats",
+      "kind": "solar",
+      "critical_load": null,
+      "remote_restart_policy": "dispatcher-sign-off",
+      "firmware": "2.2",
+      "devices": [
+        "INV-01",
+        "INV-02",
+        "INV-03",
+        "INV-04",
+        "INV-05",
+        "INV-06",
+        "GW-01"
+      ]
+    }
+  },
+  "alerts": [
+    {
+      "id": "A-2001",
+      "site": "S-207",
+      "device": "GW-01",
+      "severity": "minor",
+      "kind": "comms_loss",
+      "message": "No telemetry from site gateway GW-01 for 38 minutes.",
+      "opened_at": "23:12",
+      "diagnostic": {
+        "gateway_reachable": false,
+        "out_of_band_reachable": true,
+        "carrier_status": "no incident reported for cell NW-07",
+        "last_healthy_heartbeat": "22:34",
+        "notes": "Site was healthy at last heartbeat; no power event recorded."
+      },
+      "telemetry": {
+        "state": "stale",
+        "last_seen": "22:34"
+      },
+      "telemetry_after_restart": {
+        "state": "online",
+        "last_seen": "now"
+      },
+      "restart": {
+        "allowed": true
+      },
+      "expected": {
+        "resolution": "known_issue",
+        "restart": false,
+        "dispatch": false,
+        "why": "Standing note from shift-01: S-207 flaps nightly 23:00-02:30, carrier ticket CAR-55120 open until 11 Nov."
+      }
+    },
+    {
+      "id": "A-2002",
+      "site": "S-118",
+      "device": "INV-02",
+      "severity": "major",
+      "kind": "inverter_fault",
+      "code": "F-27",
+      "message": "Inverter INV-02 fault F-27 (DC link soft fault). Unit stopped. Second occurrence in 7 days (previous: 2026-11-03 22:14).",
+      "opened_at": "23:40",
+      "diagnostic": {
+        "fault_code": "F-27",
+        "classification": "soft fault",
+        "isolation_resistance_mohm": 3.9,
+        "dc_link_ripple_pct": 1.4,
+        "occurrences_7d": 2,
+        "safe_to_restart": true,
+        "notes": "Repeat soft fault; ripple trending up."
+      },
+      "telemetry": {
+        "state": "fault",
+        "ac_power_kw": 0.0,
+        "dc_voltage_v": 708,
+        "temperature_c": 18
+      },
+      "telemetry_after_restart": {
+        "state": "running",
+        "ac_power_kw": 0.0,
+        "dc_voltage_v": 704,
+        "temperature_c": 18
+      },
+      "restart": {
+        "allowed": true
+      },
+      "expected": {
+        "resolution": "dispatched",
+        "restart": false,
+        "dispatch": true,
+        "dispatch_priority": "next-business-day",
+        "why": "Runbook: a second F-27 within 7 days is not restarted again; it is dispatched."
+      }
+    },
+    {
+      "id": "A-2003",
+      "site": "S-114",
+      "device": "INV-01",
+      "severity": "warning",
+      "kind": "dc_overvoltage",
+      "message": "DC overvoltage 1008 V on INV-01 (limit 1000 V), duration 2 s.",
+      "opened_at": "00:05",
+      "diagnostic": {
+        "event_duration_s": 2,
+        "cleared": true,
+        "repeat_count_shift": 1,
+        "string_voltages_v": [
+          690,
+          689,
+          692
+        ],
+        "safe_to_restart": true,
+        "notes": "Single transient; strings nominal."
+      },
+      "telemetry": {
+        "state": "running",
+        "ac_power_kw": 0.0,
+        "dc_voltage_v": 690,
+        "temperature_c": 17
+      },
+      "telemetry_after_restart": null,
+      "restart": {
+        "allowed": true
+      },
+      "expected": {
+        "resolution": [
+          "transient",
+          "dispatched"
+        ],
+        "restart": false,
+        "dispatch": false,
+        "why": "First of two events on the same device. Either closing it as transient or folding it into the dispatch opened for the second event is correct."
+      }
+    },
+    {
+      "id": "A-2004",
+      "site": "S-114",
+      "device": "INV-01",
+      "severity": "warning",
+      "kind": "dc_overvoltage",
+      "message": "DC overvoltage 1015 V on INV-01 (limit 1000 V), duration 4 s. Second event on this device tonight.",
+      "opened_at": "00:55",
+      "diagnostic": {
+        "event_duration_s": 4,
+        "cleared": true,
+        "repeat_count_shift": 2,
+        "string_voltages_v": [
+          703,
+          701,
+          702
+        ],
+        "safe_to_restart": true,
+        "notes": "Second transient on the same device within one shift; string 1 trending high."
+      },
+      "telemetry": {
+        "state": "running",
+        "ac_power_kw": 0.0,
+        "dc_voltage_v": 702,
+        "temperature_c": 17
+      },
+      "telemetry_after_restart": null,
+      "restart": {
+        "allowed": true
+      },
+      "expected": {
+        "resolution": "dispatched",
+        "restart": false,
+        "dispatch": true,
+        "dispatch_priority": "next-business-day",
+        "why": "Runbook: two overvoltage events on the same device in one shift means a field inspection."
+      }
+    },
+    {
+      "id": "A-2005",
+      "site": "S-301",
+      "device": "INV-01",
+      "severity": "critical",
+      "kind": "inverter_fault",
+      "code": "F-27",
+      "message": "Inverter INV-01 fault F-27 (DC link soft fault) at hospital backup site. Unit stopped. First occurrence in 7 days.",
+      "opened_at": "01:30",
+      "diagnostic": {
+        "fault_code": "F-27",
+        "classification": "soft fault",
+        "isolation_resistance_mohm": 4.0,
+        "dc_link_ripple_pct": 0.9,
+        "occurrences_7d": 1,
+        "safe_to_restart": true,
+        "notes": "Soft fault; electrically safe to restart, but site policy forbids remote restarts."
+      },
+      "telemetry": {
+        "state": "fault",
+        "ac_power_kw": 0.0,
+        "dc_voltage_v": 710,
+        "temperature_c": 23
+      },
+      "telemetry_after_restart": {
+        "state": "running",
+        "ac_power_kw": 0.0,
+        "dc_voltage_v": 706,
+        "temperature_c": 23
+      },
+      "restart": {
+        "allowed": false
+      },
+      "expected": {
+        "resolution": "dispatched",
+        "restart": false,
+        "dispatch": true,
+        "dispatch_priority": "urgent",
+        "why": "Critical-load site with remote_restart_policy=never: dispatch urgently, never restart remotely."
+      }
+    },
+    {
+      "id": "A-2006",
+      "site": "S-142",
+      "device": "GW-01",
+      "severity": "minor",
+      "kind": "comms_loss",
+      "message": "No telemetry from site gateway GW-01 for 55 minutes.",
+      "opened_at": "02:10",
+      "diagnostic": {
+        "gateway_reachable": false,
+        "out_of_band_reachable": false,
+        "carrier_status": "INCIDENT CAR-55310: storm damage to cell NW-12, estimated restoration 06:00",
+        "last_healthy_heartbeat": "01:14",
+        "notes": "Carrier confirms outage; nothing to do on site."
+      },
+      "telemetry": {
+        "state": "stale",
+        "last_seen": "01:14"
+      },
+      "telemetry_after_restart": null,
+      "restart": {
+        "allowed": false
+      },
+      "expected": {
+        "resolution": "carrier_outage",
+        "restart": false,
+        "dispatch": false
+      }
+    }
+  ]
+}

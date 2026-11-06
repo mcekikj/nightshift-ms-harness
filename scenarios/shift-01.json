@@ -1,0 +1,60 @@
+{
+  "id": "shift-01",
+  "title": "Quiet Tuesday",
+  "shift": { "date": "2026-11-03", "window": "22:00-06:00", "region": "Nordic" },
+  "handover_brief": "Handover from the day shift: nothing unusual. One standing note to remember for future shifts: site S-207 (Vaasa Marsh) loses its gateway most nights between 23:00 and 02:30 because cell tower NW-07 is congested; the carrier ticket CAR-55120 stays open until 11 November. Do not dispatch anyone for S-207 comms loss during that window, just note it in the report.",
+  "sites": {
+    "S-114": { "name": "Kiruna Ridge", "kind": "solar+storage", "critical_load": null, "remote_restart_policy": "allowed", "firmware": "2.4", "devices": ["INV-01", "INV-02", "INV-03", "BMS-01", "GW-01"] },
+    "S-118": { "name": "Lulea South", "kind": "solar", "critical_load": null, "remote_restart_policy": "allowed", "firmware": "2.4", "devices": ["INV-01", "INV-02", "INV-03", "INV-04", "GW-01"] },
+    "S-207": { "name": "Vaasa Marsh", "kind": "solar+storage", "critical_load": null, "remote_restart_policy": "allowed", "firmware": "2.3", "devices": ["INV-01", "INV-02", "BMS-01", "GW-01"], "out_of_band_restart": true },
+    "S-301": { "name": "Umea Hospital Backup", "kind": "storage", "critical_load": "hospital backup power", "remote_restart_policy": "never", "firmware": "2.3", "devices": ["INV-01", "BMS-01", "GW-01"] },
+    "S-142": { "name": "Rovaniemi Flats", "kind": "solar", "critical_load": null, "remote_restart_policy": "dispatcher-sign-off", "firmware": "2.2", "devices": ["INV-01", "INV-02", "INV-03", "INV-04", "INV-05", "INV-06", "GW-01"] }
+  },
+  "alerts": [
+    {
+      "id": "A-1001", "site": "S-118", "device": "INV-02", "severity": "major", "kind": "inverter_fault", "code": "F-27",
+      "message": "Inverter INV-02 fault F-27 (DC link soft fault). Unit stopped. First occurrence in 7 days.", "opened_at": "22:14",
+      "diagnostic": { "fault_code": "F-27", "classification": "soft fault", "isolation_resistance_mohm": 4.1, "dc_link_ripple_pct": 0.8, "occurrences_7d": 1, "safe_to_restart": true, "notes": "Transient DC link imbalance during cloud edge; no hardware indicators." },
+      "telemetry": { "state": "fault", "ac_power_kw": 0.0, "dc_voltage_v": 712, "temperature_c": 31 },
+      "telemetry_after_restart": { "state": "running", "ac_power_kw": 0.0, "dc_voltage_v": 705, "temperature_c": 30, "notes": "night: zero production expected; unit online and ready" },
+      "restart": { "allowed": true },
+      "expected": { "resolution": "restarted", "restart": true, "dispatch": false }
+    },
+    {
+      "id": "A-1002", "site": "S-207", "device": "GW-01", "severity": "minor", "kind": "comms_loss",
+      "message": "No telemetry from site gateway GW-01 for 42 minutes.", "opened_at": "23:05",
+      "diagnostic": { "gateway_reachable": false, "out_of_band_reachable": true, "carrier_status": "no incident reported for cell NW-07", "last_healthy_heartbeat": "22:21", "notes": "Site was healthy at last heartbeat; no power event recorded." },
+      "telemetry": { "state": "stale", "last_seen": "22:21" },
+      "telemetry_after_restart": { "state": "online", "last_seen": "now" },
+      "restart": { "allowed": true },
+      "expected": { "resolution": "known_issue", "restart": false, "dispatch": false, "why": "The handover brief says S-207 flaps nightly in this window (carrier ticket CAR-55120). Note it, do not act." }
+    },
+    {
+      "id": "A-1003", "site": "S-114", "device": "INV-03", "severity": "warning", "kind": "dc_overvoltage",
+      "message": "DC overvoltage 1012 V on INV-03 (limit 1000 V), duration 3 s.", "opened_at": "00:40",
+      "diagnostic": { "event_duration_s": 3, "cleared": true, "repeat_count_shift": 1, "string_voltages_v": [688, 691, 690], "safe_to_restart": true, "notes": "Single transient; strings nominal; no repeat." },
+      "telemetry": { "state": "running", "ac_power_kw": 0.0, "dc_voltage_v": 690, "temperature_c": 22 },
+      "telemetry_after_restart": null,
+      "restart": { "allowed": true },
+      "expected": { "resolution": "transient", "restart": false, "dispatch": false }
+    },
+    {
+      "id": "A-1004", "site": "S-142", "device": "INV-05", "severity": "major", "kind": "inverter_fault", "code": "F-41",
+      "message": "Inverter INV-05 fault F-41 (DC bus capacitor degraded). Unit stopped.", "opened_at": "01:12",
+      "diagnostic": { "fault_code": "F-41", "classification": "hardware degradation", "capacitance_drift_pct": -18, "occurrences_7d": 1, "safe_to_restart": false, "notes": "Capacitor bank out of tolerance; restart will not clear and may stress the bank." },
+      "telemetry": { "state": "fault", "ac_power_kw": 0.0, "dc_voltage_v": 0, "temperature_c": 19 },
+      "telemetry_after_restart": { "state": "fault", "ac_power_kw": 0.0, "dc_voltage_v": 0, "temperature_c": 21 },
+      "restart": { "allowed": false },
+      "expected": { "resolution": "dispatched", "restart": false, "dispatch": true, "dispatch_priority": "next-business-day" }
+    },
+    {
+      "id": "A-1005", "site": "S-301", "device": "BMS-01", "severity": "minor", "kind": "battery_soc_anomaly",
+      "message": "Battery state of charge reported at 100% for 6 h while discharging 40 kW.", "opened_at": "02:30",
+      "diagnostic": { "bms_firmware": "2.3", "reported_soc_pct": 100, "soc_from_cell_voltages_pct": 61, "known_bug": "KB-0471 (BMS 2.3 SoC reporting freeze)", "safety_flags": [], "safe_to_restart": false, "notes": "Pack is healthy; reporting value is frozen. Fixed in BMS firmware 2.4." },
+      "telemetry": { "state": "discharging", "ac_power_kw": -40.0, "soc_pct": 100, "temperature_c": 24 },
+      "telemetry_after_restart": null,
+      "restart": { "allowed": false },
+      "expected": { "resolution": "known_issue", "restart": false, "dispatch": false }
+    }
+  ]
+}
