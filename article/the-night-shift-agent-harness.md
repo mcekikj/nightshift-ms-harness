@@ -96,15 +96,11 @@ Second, **the dangerous parts are opt-in and labelled**. File access, looping, b
 
 ### What is in the box
 
-The harness composes five layers. One call wires up the middle three; you bring the first and the last.
+The harness composes five layers, shown in Figure 1.
 
-| Layer | What is in it | Who |
-| --- | --- | --- |
-| Chat client | The model. Agent Framework 1.0 lists first-party connectors for Foundry, Azure OpenAI, OpenAI, Anthropic, Amazon Bedrock, Google Gemini and Ollama; in Python the last four are still pre-release packages. | You |
-| Chat pipeline | Function invocation with an iteration limit, message injection, history saved after every model call, optional compaction. | Harness |
-| Context providers | Instructions, tools, todo list, plan/execute modes, file memory, and optional skills, file access and background agents. | Harness |
-| Middleware | Tool approval with standing rules and auto-approval callbacks, OpenTelemetry, optional bounded looping. | Harness |
-| Application | Streams output, shows progress, collects approvals. Microsoft ships console samples, "not shipped framework components." | You |
+![The five layers of a harness agent: the chat client and the application are yours; the chat pipeline, the context providers and the middleware come from the harness](images/fig-1-harness-layers.png)
+
+*Figure 1. The five layers of a harness agent, following the architecture on Microsoft Learn. One call to `create_harness_agent` wires up the chat pipeline, the context providers and the middleware; the chat client and the application are yours.*
 
 In Python, `create_harness_agent(client=...)` also wires in message injection, and its file memory is scoped to the session. Compaction needs both token budgets or a custom strategy. Even the bare call prints one `ExperimentalWarning` in 1.24.0, because the default file memory is backed by the experimental `FileSystemAgentFileStore`.
 
@@ -359,14 +355,11 @@ The repository includes `evaluate.py`, which runs the scenarios headless with a 
 
 Shift 2 is the storm night. It contains a repeat of the Vaasa Marsh comms loss (the handover note from shift 1 says not to dispatch), a second F-27 on the Luleå inverter (the runbook says do not restart twice, dispatch), two overvoltage events on one Kiruna inverter (two in a shift means a site visit) and a soft fault at the hospital backup site (never restart remotely). It is designed to punish an agent that has no memory and no patience.
 
-Model for both: `gpt-6-luna` (Global Standard) on a Microsoft Foundry project in Sweden Central. Each agent worked both shifts three times on 6 November 2026, with the code as published. Model calls, tool calls and tokens come from Agent Framework's own OpenTelemetry spans (`chat` and `execute_tool`); correctness and restarts are scored against the scenario's ground truth, and approvals are counted by the approver. Ranges are the lowest and highest of the three runs.
+Model for both: `gpt-6-luna` (Global Standard) on a Microsoft Foundry project in Sweden Central. Each agent worked both shifts three times on 6 November 2026, with the code as published. Model calls, tool calls and tokens come from Agent Framework's own OpenTelemetry spans (`chat` and `execute_tool`); correctness and restarts are scored against the scenario's ground truth, and approvals are counted by the approver. Figure 2 shows the results.
 
-| Agent | Shift | Correct (runs 1, 2, 3) | Unexpected restarts | Approvals | Tool calls (Northwatch tools) | Model calls | Input tokens | From cache | Output tokens |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| harness | shift-01 | 5/5, 5/5, 5/5 | 0 | 2 | 30-37 (16-19) | 15-31 | 168,670-343,978 | 81-93% | 3,480-4,466 |
-| plain | shift-01 | 5/5, 5/5, 5/5 | 0 | 2 | 19 (19) | 6 | 26,070-26,434 | 78-90% | 1,849-2,051 |
-| harness | shift-02 | 6/6, 6/6, 6/6 | 0 | 3 | 38-42 (20-21) | 32-33 | 390,838-408,802 | 86-87% | 5,766-6,233 |
-| plain | shift-02 | 5/6, 5/6, 5/6 | 1 | 4 | 22 (22) | 6 | 27,141-27,472 | 87% | 2,146-2,375 |
+![Results: on the quiet night both agents were correct in every run; on the storm night the harness agent was correct in every run and the plain agent made one unexpected restart in each run, while the harness used more tool calls, model calls and tokens](images/fig-2-evaluation.png)
+
+*Figure 2. The harness agent and the plain agent on both nights, three runs each. The harness agent made no more calls to Northwatch's own tools than the plain agent; the rest of its tool calls were its own todo, skill, memory and file operations.*
 
 No agent made an unsafe restart attempt, repeated a restart, missed a restart or a dispatch, dispatched twice for one site or chose the wrong priority, in any run. The harness agent wrote the shift report to the workspace every time; the plain agent has no file tools and gives its report in the final answer. Wall-clock time is left out because the runs shared the deployment with the other jobs described below; a harness shift took one to two minutes, a plain one under half a minute.
 
@@ -378,13 +371,11 @@ The storm night is where the difference lives, and it lives in exactly one place
 
 The harness agent had saved the handover in `site-notes.md` during shift 1 and read its memory again on shift 2. In all three runs it closed the alert as a known issue without touching anything, citing a carrier ticket that appears nowhere in the storm night's alerts, diagnostics or handover. From the second run: "S-207 GW-01 loss occurred during the documented NW-07 congestion window; carrier ticket CAR-55120 remains open through 2026-11-11. No restart or dispatch per standing note."
 
-**Where the state lives.** The harness gives the agent two places to carry state from one night to the next: the file memory, and the file-access workspace where shift 1 leaves its report. To see which one mattered, I ran three more variants of the harness agent, three runs each:
+**Where the state lives.** The harness gives the agent two places to carry state from one night to the next: the file memory, and the file-access workspace where shift 1 leaves its report. To see which one mattered, I ran three more variants of the harness agent, three runs each, and set them next to the full harness and the plain agent in Figure 3.
 
-| Harness variant | Storm night (runs 1, 2, 3) | Vaasa Marsh gateway |
-| --- | --- | --- |
-| Memory only (file access off), shift 1 then shift 2 | 6/6, 6/6, 6/6 | known issue in every run |
-| Workspace only (file memory off), shift 1 then shift 2 | 6/6, 6/6, 5/6 | known issue twice, restarted once |
-| Neither: the storm night started cold | 5/6, 5/6, 5/6 | restarted in every run |
+![Storm-night ablation: the full harness and the memory-only harness left the Vaasa Marsh gateway alone in every run, the workspace-only harness in two runs out of three, and the harness with nothing carried over and the plain agent restarted it in every run](images/fig-3-where-state-lives.png)
+
+*Figure 3. What carried the handover from one night to the next. The file memory alone was enough in every run, the workspace alone only when the agent improvised a notebook in it, and with nothing carried over the harness agent made the plain agent's mistake.*
 
 The notebook is the dependable channel. With memory alone the agent got the gateway right every time. With the workspace alone it got it right only when it improvised a notebook there: in two runs it wrote `site-notes.md` into the workspace during shift 1, and because that path is outside `reports/`, the harness stopped and asked for approval before the write. In the third run it saved only the report, and restarted the gateway the next night. Started cold, it made the plain agent's mistake every time, with the plain agent's reasoning: "GW-01 had out-of-band reachability and no carrier incident; remote restart completed and telemetry confirms the gateway is online." Todos, modes, skills and approvals do not carry knowledge from one night to the next. The notebook does.
 
