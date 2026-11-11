@@ -1,0 +1,1 @@
+- S-207 (Vaasa Marsh): gateway GW-01 loses connection most nights between 23:00 and 02:30 because cell tower NW-07 is congested. Carrier ticket CAR-55120 remains open until 11 November 2026. Do not dispatch for S-207 comms loss during this window; note it in the shift report.
